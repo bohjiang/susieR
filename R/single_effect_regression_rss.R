@@ -1,38 +1,41 @@
 #' @rdname single_effect_regression
-#' 
+#'
 #' @param z A p-vector of z scores.
-#' 
+#'
 #' @param Sigma \code{residual_var*R + lambda*I}
-#' 
+#'
 #' @keywords internal
-#' 
+#'
 single_effect_regression_rss =
-  function (z, Sigma, V = 1, prior_weights = NULL,
+  function (z, Sigma, V = 0.957^2, prior_weights = NULL,
             optimize_V = c("none", "optim", "uniroot", "EM", "simple"),
             check_null_threshold = 0) {
+  M = 1.12 # Added features for CNV mapping
   p = length(z)
   shat2 = 1/attr(Sigma,"RjSinvRj")
   if (is.null(prior_weights))
     prior_weights = rep(1/p,p)
 
-  if (optimize_V != "EM" && optimize_V != "none") 
+  if (optimize_V != "EM" && optimize_V != "none")
     V = optimize_prior_variance_rss(optimize_V,z,Sigma,prior_weights,
                                     alpha = NULL,post_mean2 = NULL,V_init = V,
                                     check_null_threshold=check_null_threshold)
 
   lbf = sapply(1:p, function(j)
-    -0.5 * log(1 + (V/shat2[j])) +
-     0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma,"SinvRj")[,j] * z)^2
-  )
+     -0.5 * log(1 + (V/shat2[j])) +
+      0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma, "SinvRj")[,j] * z)^2 +
+      M * sum(attr(Sigma, "SinvRj")[,j] * z) * (1/(1 + V/shat2[j])) +
+      0.5 * (M^2/V) * (1/(1 + V/shat2[j]) - 1)
+     )
 
   # Deal with special case of infinite shat2 (e.g., happens if X does not
   # vary).
-  lbf[is.infinite(shat2)] = 0 
+  lbf[is.infinite(shat2)] = 0
 
   # w is proportional to BF, but subtract max for numerical stability.
   maxlbf = max(lbf)
   w = exp(lbf-maxlbf)
-  
+
   # posterior prob on each SNP
   w_weighted = w * prior_weights
   weighted_sum_w = sum(w_weighted)
@@ -45,26 +48,30 @@ single_effect_regression_rss =
   lbf_model = maxlbf + log(weighted_sum_w) # Analogue of loglik in the
                                            # non-summary case.
 
-  if (optimize_V=="EM") 
+  if (optimize_V=="EM")
     V = optimize_prior_variance_rss(optimize_V,z,Sigma,prior_weights,
         alpha,post_mean2,check_null_threshold = check_null_threshold)
-  
+
   return(list(alpha = alpha,mu = post_mean,mu2 = post_mean2,lbf = lbf,
               V = V,lbf_model = lbf_model))
 }
 
 loglik_rss = function (V, z, Sigma, prior_weights) {
+  M = 1.12 # Free parameter mu0 needed for CNV-mapping
   p = length(z)
   shat2 = 1/attr(Sigma,"RjSinvRj")
 
   # log(bf) for each SNP.
-  lbf = sapply(1:p,function (j)
-    -0.5 * log(1 + (V/shat2[j])) +
-     0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma,"SinvRj")[,j] * z)^2)
-  
+  lbf = sapply(1:p, function(j)
+     -0.5 * log(1 + (V/shat2[j])) +
+      0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma, "SinvRj")[,j] * z)^2 +
+      M * sum(attr(Sigma, "SinvRj")[,j] * z) * (1/(1 + V/shat2[j])) +
+      0.5 * (M^2/V) * (1/(1 + V/shat2[j]) - 1)
+  )
+
   # Deal with special case of infinite shat2 (e.g., happens if X does
   # not vary).
-  lbf[is.infinite(shat2)] = 0 
+  lbf[is.infinite(shat2)] = 0
 
   maxlbf = max(lbf)
   w = exp(lbf-maxlbf) # w = BF/BFmax
@@ -89,7 +96,7 @@ optimize_prior_variance_rss = function (optimize_V, z, Sigma, prior_weights,
                  prior_weights = prior_weights,method = "Brent",
                  lower = -30,upper = 15)$par
       ## if the estimated one is worse than current one, don't change it.
-      if(neg.loglik_z.logscale_rss(lV, z = z,Sigma = Sigma,prior_weights = prior_weights) > 
+      if(neg.loglik_z.logscale_rss(lV, z = z,Sigma = Sigma,prior_weights = prior_weights) >
          neg.loglik_z.logscale_rss(log(V), z = z,Sigma = Sigma,prior_weights = prior_weights)){
         lV = log(V)
       }
@@ -99,7 +106,7 @@ optimize_prior_variance_rss = function (optimize_V, z, Sigma, prior_weights,
     else
       stop("Invalid option for optimize_V")
   }
-  
+
   # Set V exactly 0 if that beats the numerical value. By
   # check_null_threshold in loglik. check_null_threshold = 0.1 is
   # exp(0.1) = 1.1 on likelihood scale; it means that for parsimony
