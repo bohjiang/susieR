@@ -7,10 +7,9 @@
 #' @keywords internal
 #'
 single_effect_regression_rss =
-  function (z, Sigma, V = 0.957^2, prior_weights = NULL,
+  function (z, Sigma, V = 1, prior_weights = NULL,
             optimize_V = c("none", "optim", "uniroot", "EM", "simple"),
             check_null_threshold = 0) {
-  M = 1.12 # Added features for CNV mapping
   p = length(z)
   shat2 = 1/attr(Sigma,"RjSinvRj")
   if (is.null(prior_weights))
@@ -23,9 +22,7 @@ single_effect_regression_rss =
 
   lbf = sapply(1:p, function(j)
      -0.5 * log(1 + (V/shat2[j])) +
-      0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma, "SinvRj")[,j] * z)^2 +
-      M * sum(attr(Sigma, "SinvRj")[,j] * z) * (1/(1 + V/shat2[j])) +
-      0.5 * (M^2/V) * (1/(1 + V/shat2[j]) - 1)
+      0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma, "SinvRj")[,j] * z)^2
      )
 
   # Deal with special case of infinite shat2 (e.g., happens if X does not
@@ -64,9 +61,7 @@ loglik_rss = function (V, z, Sigma, prior_weights) {
   # log(bf) for each SNP.
   lbf = sapply(1:p, function(j)
      -0.5 * log(1 + (V/shat2[j])) +
-      0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma, "SinvRj")[,j] * z)^2 +
-      M * sum(attr(Sigma, "SinvRj")[,j] * z) * (1/(1 + V/shat2[j])) +
-      0.5 * (M^2/V) * (1/(1 + V/shat2[j]) - 1)
+      0.5 * (V/(1 + (V/shat2[j]))) * sum(attr(Sigma, "SinvRj")[,j] * z)^2
   )
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
