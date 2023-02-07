@@ -1,15 +1,15 @@
 #' @rdname single_effect_regression
-#' 
+#'
 #' @param Xty A p-vector.
-#' 
+#'
 #' @param dXtX A p-vector containing the diagonal elements of
 #'   \code{crossprod(X)}.
-#' 
+#'
 #' @importFrom stats uniroot
 #' @importFrom stats optim
 #'
 #' @keywords internal
-#' 
+#'
 single_effect_regression_ss =
   function (Xty, dXtX, V = 1, residual_variance = 1, prior_weights = NULL,
             optimize_V = c("none", "optim", "uniroot", "EM", "simple"),
@@ -26,17 +26,21 @@ single_effect_regression_ss =
                                 check_null_threshold = check_null_threshold)
 
   # log(bf) for each SNP.
-  lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
-        dnorm(betahat,0,sqrt(shat2),log = TRUE)
+  M       = 0
+  b2.coef = V / (shat2 * (V + shat2))
+  b.coef  = (2 * M) / (V + shat2)
+  const   = (-M^2) / (V + shat2)
+  #lbf = dnorm(betahat,0,sqrt(V + shat2), log = TRUE) - dnorm(betahat,0,sqrt(shat2), log = TRUE)
+  lbf = 0.5 * (log(shat2/(V + shat2)) + b2.coef * betahat^2 + b.coef * betahat + const)
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
   # not vary).
-  lbf[is.infinite(shat2)] = 0 
+  lbf[is.infinite(shat2)] = 0
 
   # w is proportional to BF, but subtract max for numerical stability
   # posterior prob on each SNP.
   maxlbf = max(lbf)
-  w = exp(lbf - maxlbf) 
+  w = exp(lbf - maxlbf)
   w_weighted = w * prior_weights
   weighted_sum_w = sum(w_weighted)
   alpha = w_weighted / weighted_sum_w
