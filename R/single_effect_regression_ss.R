@@ -26,8 +26,8 @@ single_effect_regression_ss =
                                 check_null_threshold = check_null_threshold)
 
   # log(bf) for each SNP.
-  M       = 1.12
-  V       = 0.957^2
+  M       = 1.118267
+  #V       = 0.957^2
   b2.coef = V / (shat2 * (V + shat2))
   b.coef  = (2 * M) / (V + shat2)
   const   = (-M^2) / (V + shat2)
