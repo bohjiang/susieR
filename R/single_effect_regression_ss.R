@@ -27,7 +27,7 @@ single_effect_regression_ss =
 
   # log(bf) for each SNP.
   #M       = 1.118267
-  M = 0
+  M = 1.5
   b2.coef = V / (shat2 * (V + shat2))
   b.coef  = (2 * M) / (V + shat2)
   const   = (-M^2) / (V + shat2)
