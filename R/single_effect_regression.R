@@ -88,14 +88,14 @@ single_effect_regression =
         check_null_threshold = check_null_threshold)
 
   # log(bf) for each SNP
-  M       = 1.118267
-  b2.coef = V / (shat2 * (V + shat2))
-  b.coef  = (2 * M) / (V + shat2)
-  const   = (-M^2) / (V + shat2)
-  lbf = 0.5 * (log(shat2/(V + shat2)) + b2.coef * betahat^2 + b.coef * betahat + const)
+  # M       = 1.118267
+  # b2.coef = V / (shat2 * (V + shat2))
+  # b.coef  = (2 * M) / (V + shat2)
+  # const   = (-M^2) / (V + shat2)
+  # lbf = 0.5 * (log(shat2/(V + shat2)) + b2.coef * betahat^2 + b.coef * betahat + const)
 
-  #lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
-  #      dnorm(betahat,0,sqrt(shat2),log = TRUE)
+  lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
+       dnorm(betahat,0,sqrt(shat2),log = TRUE)
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
   # not vary).
