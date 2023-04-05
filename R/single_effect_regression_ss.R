@@ -26,8 +26,7 @@ single_effect_regression_ss =
                                 check_null_threshold = check_null_threshold)
 
   # log(bf) for each SNP.
-  #mu0       = 1.118267
-  mu0 = 1.4
+  mu0 = 1.093863
   lbf = dnorm(betahat,mu0,sqrt(V + shat2),log = TRUE) - dnorm(betahat,0,sqrt(shat2),log = TRUE)
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
