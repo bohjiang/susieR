@@ -30,7 +30,8 @@ single_effect_regression_ss =
   #mu0 = 0.940144667 # seed 999999
   #mu0 = 0.982612064 # seed 20230516
   #mu0 = 0.9226993227 # seed 123456
-  mu0 = 1.151139
+  #mu0 = 1.151139 # seed 88888
+  mu0 = -0.0855389566126894
   lbf = dnorm(betahat,mu0,sqrt(V + shat2),log = TRUE) - dnorm(betahat,0,sqrt(shat2),log = TRUE)
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
